@@ -3,7 +3,7 @@ PLUGIN_NAME = custom-data-type-georef
 L10N_FILES = l10n/$(PLUGIN_NAME).csv
 L10N_GOOGLE_KEY = 1ux8r_kpskdAwTaTjqrk92up5eyyILkpsv4k96QltmI0
 L10N_GOOGLE_GID = 1569075372
-L10N2JSON = python ../easydb-library/tools/l10n2json.py
+L10N2JSON = python easydb-library/tools/l10n2json.py
 
 INSTALL_FILES = \
 	$(WEB)/l10n/cultures.json \
@@ -14,7 +14,7 @@ INSTALL_FILES = \
 	$(JS) \
 	CustomDataTypeGeoref.config.yml
 
-COFFEE_FILES = ../easydb-library/src/commons.coffee \
+COFFEE_FILES = easydb-library/src/commons.coffee \
 	src/webfrontend/CustomDataTypeGeoref.coffee
 
 MAPBOX1 = src/external/mapbox-gl.min.js
@@ -27,7 +27,7 @@ CSSTARGET = build/webfrontend/mapbox.css
 
 all: build
 
-include ../easydb-library/tools/base-plugins.make
+include easydb-library/tools/base-plugins.make
 
 build: code $(L10N)
 
