@@ -41,7 +41,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       placement: "c"
       pane:
         # titel of popovers
-        header_left: new CUI.Label(text: "Freie Georeferenzierung auf Karte setzen (Georef)")
+        header_left: new CUI.Label(text: $$('custom.data.type.georef.name'))
         # "save"-button
         footer_right: []
         footer_left: cdata_form
@@ -252,14 +252,14 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     fields = [
       {
         form:
-          label: "Gewählter Typ"
+          label: $$('custom.data.type.georef.edit.choosen_type')
         type: CUI.Output
         name: "conceptName"
         data: {conceptName: cdata.conceptName}
       }
       {
         form:
-          label: "Verknüpfte Georeferenzierung"
+          label: $$('custom.data.type.georef.edit.linked_georef')
         type: CUI.Output
         name: "conceptURI"
         data: {conceptURI: cdata.conceptURI}
@@ -313,7 +313,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   __getStaticMapboxMap: (cdata) ->
     that = @
     mapContent = new CUI.Label
-                  text: "Kartenansicht"
+                  text: $$('custom.data.type.georef.edit.kartenansicht')
     htmlContent = 'no map available'
     # read mapbox_access_token from schema
     if that.getCustomSchemaSettings().mapbox_access_token?.value
@@ -331,9 +331,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
           ]
           vp = geoViewport.viewport(bounds, size)
           encodedGeoJSON = JSON.parse(cdata.conceptURI)
-          console.log encodedGeoJSON
-          #onlyGeometry = onlyGeometry.geometry
-          #console.log(onlyGeometry)
           encodedGeoJSON.properties['stroke-width'] = 4
           encodedGeoJSON.properties['stroke'] = '#C20000'
           encodedGeoJSON = JSON.stringify(encodedGeoJSON)
@@ -353,7 +350,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   __getUsuableMapboxMap: (cdata) ->
     that = @
     mapContent = new CUI.Label
-                  text: "Kartenansicht"
+                  text: $$('custom.data.type.georef.edit.kartenansicht')
     "__getUsuableMapboxMap"
 
 
@@ -384,7 +381,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             left:
               content:
                 new CUI.Label
-                  text: "Kartenansicht (" + cdata.conceptName + ")"
+                  text: $$('custom.data.type.georef.edit.kartenansicht') + "(" + cdata.conceptName + ")"
             right:
               content: [
                 #CUI.Pane.getToggleFillScreenButton()
