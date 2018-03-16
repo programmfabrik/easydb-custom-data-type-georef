@@ -1,6 +1,13 @@
 plugin:
   name: custom-data-type-georef
   version: 1.2
+  url: https://github.com/programmfabrik/easydb-custom-data-type-georef
+  displayname:
+    de-DE: georef-Verknüpfung
+    en-US: georef-Referencing
+  info:
+    de-DE: Ermöglicht Georeferenzierungen auf einer Karte im geoJSON-Format.
+    en-US: Enables georeferencing on a map in geoJSON format.
   server:
     api-version:
       require: 1
