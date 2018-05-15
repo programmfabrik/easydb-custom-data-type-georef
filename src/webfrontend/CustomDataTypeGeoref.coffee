@@ -4,20 +4,27 @@ Session::getCustomDataTypes = ->
 class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
   #######################################################################
+  # load mapbox-css
+  CUI.ready =>
+    cssLoader = new CUI.CSSLoader()
+    cssLoader.load(url: '/api/v1/plugin/static/extension/custom-data-type-georef/mapbox.css')
+
+
+  #######################################################################
   # return name of plugin
   getCustomDataTypeName: ->
     "custom:base.custom-data-type-georef.georef"
+
 
   #######################################################################
   # return name (l10n) of plugin
   getCustomDataTypeNameLocalized: ->
     $$("custom.data.type.georef.name")
 
-
   #######################################################################
   # show popover and fill it with the form-elements
   showEditPopover: (btn, cdata, layout) ->
-
+    
     cdata_form = new CUI.Form
       data: cdata
       fields: @__getEditorFields(cdata)
