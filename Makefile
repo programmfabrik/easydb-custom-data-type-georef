@@ -11,6 +11,7 @@ INSTALL_FILES = \
 	$(WEB)/l10n/en-US.json \
 	$(WEB)/l10n/es-ES.json \
 	$(WEB)/l10n/it-IT.json \
+	$(WEB)/mapbox.css \
 	$(JS) \
 	CustomDataTypeGeoref.config.yml
 
