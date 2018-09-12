@@ -1,6 +1,7 @@
 PLUGIN_NAME = custom-data-type-georef
 
-L10N_FILES = l10n/$(PLUGIN_NAME).csv
+L10N_FILES = easydb-library/src/commons.l10n.csv \
+    l10n/$(PLUGIN_NAME).csv
 L10N_GOOGLE_KEY = 1ux8r_kpskdAwTaTjqrk92up5eyyILkpsv4k96QltmI0
 L10N_GOOGLE_GID = 1569075372
 L10N2JSON = python easydb-library/tools/l10n2json.py
@@ -26,11 +27,13 @@ MAPBOX4 = src/external/geo-viewport.js
 CSS = src/external/mapbox.css
 CSSTARGET = build/webfrontend/mapbox.css
 
+SCSS_FILES = src/webfrontend/scss/main.scss
+
 all: build
 
 include easydb-library/tools/base-plugins.make
 
-build: code $(L10N)
+build: code $(L10N) $(SCSS)
 
 code: $(subst .coffee,.coffee.js,${COFFEE_FILES})
 	mkdir -p build

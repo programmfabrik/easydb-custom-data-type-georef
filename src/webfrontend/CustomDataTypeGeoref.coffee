@@ -50,12 +50,15 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         # "reset"-button
         content: xmapboxpane
     .show()
-    @__initMap(cdata, cdata_form)
+    @__initMap(cdata, cdata_form, layout)
 
 
   ##########################################################################
   # initialisiere Karte
-  __initMap: (cdata, cdata_form) ->
+  __initMap: (cdata, cdata_form, layout) ->
+
+    that = @
+
     mapbox_access_token = ''
     if @getCustomSchemaSettings().mapbox_access_token?.value
       mapbox_access_token = @getCustomSchemaSettings().mapbox_access_token?.value
@@ -162,12 +165,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       if data.features.length == 1
         geoJSON = data.features[0]
         delete geoJSON.id
-        #delete geoJSON.properties
-        #geoJSON.properties.stroke = '#C20000'
-        #geoJSON.properties['stroke-opacity'] = 1.0
-        #geoJSON.properties['stroke-width'] = 2
         type = data.features[0].geometry.type
-        console.log "type:" + type
         if type == 'Point'
           if data.features[0].geometry.coordinates.length == 2
             geoJSON = JSON.stringify(geoJSON)
@@ -176,10 +174,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Point'
-            # lock in form
-            cdata_form.getFieldsByName("conceptName")[0].storeValue(cdata.conceptName).displayValue()
-            cdata_form.getFieldsByName("conceptURI")[0].storeValue(cdata.conceptURI).displayValue()
-
+            that.__updateResult(cdata, layout)
         if type == 'LineString'
           if data.features[0].geometry.coordinates.length >= 2
             geoJSON = JSON.stringify(geoJSON)
@@ -191,9 +186,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'LineString'
-            # lock in form
-            cdata_form.getFieldsByName("conceptName")[0].storeValue(cdata.conceptName).displayValue()
-            cdata_form.getFieldsByName("conceptURI")[0].storeValue(cdata.conceptURI).displayValue()
+            that.__updateResult(cdata, layout)
 
         if type == 'Polygon'
           if data.features[0].geometry.coordinates[0].length >= 3
@@ -206,9 +199,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'
-            # lock in form
-            cdata_form.getFieldsByName("conceptName")[0].storeValue(cdata.conceptName).displayValue()
-            cdata_form.getFieldsByName("conceptURI")[0].storeValue(cdata.conceptURI).displayValue()
+            that.__updateResult(cdata, layout)
       return
 
     # add click listener on type-buttons
@@ -220,9 +211,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       # reset form
       cdata.conceptURI = ''
       cdata.conceptName = ''
-      # lock in form
-      cdata_form.getFieldsByName("conceptName")[0].storeValue(cdata.conceptName).displayValue()
-      cdata_form.getFieldsByName("conceptURI")[0].storeValue(cdata.conceptURI).displayValue()
 
       # check if only one form, else delete others
       data = draw.getAll();
@@ -250,21 +238,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   #########################################################################
   # create form
   __getEditorFields: (cdata) ->
-    fields = [
-      {
-        form:
-          label: $$('custom.data.type.georef.edit.choosen_type')
-        type: CUI.Output
-        name: "conceptName"
-        data: {conceptName: cdata.conceptName}
-      }
-      {
-        form:
-          label: $$('custom.data.type.georef.edit.linked_georef')
-        type: CUI.Output
-        name: "conceptURI"
-        data: {conceptURI: cdata.conceptURI}
-      }]
+    fields = []
 
     fields
 
@@ -310,7 +284,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
   #######################################################################
   # generates static mapbox-map via geojson
-
   __getStaticMapboxMap: (cdata) ->
     that = @
     mapContent = new CUI.Label
@@ -356,6 +329,89 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
 
   #######################################################################
+  # update result in Masterform
+  __updateResult: (cdata, layout) ->
+    that = @
+    # if field is not empty
+    if cdata?.conceptURI
+      # die uuid einkürzen..
+      displayURI = cdata.conceptURI
+      displayURI = displayURI.replace('http://', '')
+      displayURI = displayURI.replace('https://', '')
+      uriParts = displayURI.split('/')
+      uuid = uriParts.pop()
+      if uuid.length > 10
+        uuid = uuid.substring(0,5) + '…'
+        uriParts.push(uuid)
+        displayURI = uriParts.join('/')
+
+      mapContent = @__getStaticMapboxMap(cdata)
+
+      copyrightLabel = new CUI.Label
+                      text: "Copyright"
+                      size: "mini"
+      copyrightLabel.DOM.innerHTML = "©&nbsp;<a href='https://www.mapbox.com/about/maps/'>Mapbox</a>&nbsp;&nbsp;©&nbsp;<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>&nbsp;&nbsp;<strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>";
+
+
+      info = new CUI.VerticalLayout
+        class: 'ez5-info_commonPlugin'
+        top:
+          content:
+            mapPane = new CUI.Pane
+              class: "cui-mapbox-georef-pane"
+              top:
+                content: [
+                  new CUI.PaneHeader
+                    left:
+                      content:
+                        new CUI.Label
+                          text: cdata.conceptName + ' (' + $$('custom.data.type.georef.edit.kartenansicht') + ')'
+                    right:
+                      content: [
+                        #CUI.Pane.getToggleFillScreenButton()
+                      ]
+                ]
+              center:
+                content: mapContent
+
+      layout.replace(info, 'center')
+      layout.addClass('ez5-linked-object-edit')
+      options =
+        class: 'ez5-linked-object-container'
+      layout.__initPane(options, 'center')
+
+    # if field is empty, display searchfield
+    if ! cdata?.conceptURI
+      suggest_Menu_directInput
+
+      inputX = new CUI.Input
+                  class: "pluginDirectSelectEditInput"
+                  undo_and_changed_support: false
+                  name: "directSelectInput"
+                  content_size: false
+                  onKeyup: (input) =>
+                    input.setValue('')
+      inputX.render()
+
+      # init suggestmenu
+      suggest_Menu_directInput = new CUI.Menu
+          element : inputX
+          use_element_width_as_min_width: true
+
+      # init xhr-object to abort running xhrs
+      searchsuggest_xhr = { "xhr" : undefined }
+
+      layout.replace(inputX, 'center')
+      layout.removeClass('ez5-linked-object-edit')
+      options =
+        class: ''
+      layout.__initPane(options, 'center')
+
+    # did data change?
+    that.__setEditorFieldStatus(cdata, layout)
+
+
+  #######################################################################
   # renders the "result" in original form (outside popover)
 
   __renderButtonByData: (cdata) ->
@@ -382,7 +438,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             left:
               content:
                 new CUI.Label
-                  text: $$('custom.data.type.georef.edit.kartenansicht') + "(" + cdata.conceptName + ")"
+                  text: cdata.conceptName + ' (' + $$('custom.data.type.georef.edit.kartenansicht') + ')'
             right:
               content: [
                 #CUI.Pane.getToggleFillScreenButton()
