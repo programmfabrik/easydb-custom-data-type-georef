@@ -1,6 +1,5 @@
-Session::getCustomDataTypes = ->
-  @getDefaults().server.custom_data_types or {}
-
+#######################################################################
+# loadCSS
 ez5.session_ready =>
     ez5.pluginManager.getPlugin("custom-data-type-georef").loadCss()
 

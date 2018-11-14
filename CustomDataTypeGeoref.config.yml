@@ -11,13 +11,10 @@ plugin:
   server:
     api-version:
       require: 1
-  scss:
-    body:
-      - build/webfrontend/custom-data-type-georef.scss
   webfrontend:
     url: custom-data-type-georef.js
     l10n: l10n/
-    css: mapbox.css
+    css: custom-data-type-georef.css
 custom_types:
   georef:
     mapping:

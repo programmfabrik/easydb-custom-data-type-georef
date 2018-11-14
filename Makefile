@@ -10,10 +10,9 @@ INSTALL_FILES = \
 	$(WEB)/l10n/cultures.json \
 	$(WEB)/l10n/de-DE.json \
 	$(WEB)/l10n/en-US.json \
-	$(WEB)/l10n/es-ES.json \
-	$(WEB)/l10n/it-IT.json \
 	$(WEB)/mapbox.css \
 	$(JS) \
+	 $(CSS) \
 	CustomDataTypeGeoref.config.yml
 
 COFFEE_FILES = easydb-library/src/commons.coffee \
@@ -24,8 +23,7 @@ MAPBOX2 = src/external/mapbox-gl-draw.js
 MAPBOX3 = src/external/geojson-extent.js
 MAPBOX4 = src/external/geo-viewport.js
 
-CSS = src/external/mapbox.css
-CSSTARGET = build/webfrontend/mapbox.css
+CSSADDITIONAL = src/external/mapbox.css
 
 SCSS_FILES = src/webfrontend/scss/main.scss
 
@@ -33,21 +31,15 @@ all: build
 
 include easydb-library/tools/base-plugins.make
 
-build: code $(L10N) $(SCSS)
+build: code css morecss
 
-code: $(subst .coffee,.coffee.js,${COFFEE_FILES})
+code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
 	mkdir -p build/webfrontend
-	touch build/webfrontend/mapbox.css
-	cp -f $(CSS) $(CSSTARGET)
 	cat $^ > build/webfrontend/custom-data-type-georef.js
 	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) >> build/webfrontend/custom-data-type-georef.js
 
+morecss: 
+	cat $(CSSADDITIONAL) >> build/webfrontend/custom-data-type-georef.css
+
 clean: clean-base
-
-wipe: wipe-base
-
-.PHONY: clean wipe
-
-
-#
