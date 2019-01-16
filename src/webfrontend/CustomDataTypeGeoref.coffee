@@ -17,12 +17,12 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
   #######################################################################
   # show popover and fill it with the form-elements
-  showEditPopover: (btn, cdata, layout) ->
+  showEditPopover: (btn, data, cdata, layout, opts) ->
     cdata_form = new CUI.Form
       data: cdata
       fields: @__getEditorFields(cdata)
       onDataChanged: =>
-        @__updateResult(cdata, layout)
+        @__updateResult(cdata, layout, opts)
         @__setEditorFieldStatus(cdata, layout)
     .start()
 
@@ -49,12 +49,12 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         # "reset"-button
         content: xmapboxpane
     .show()
-    @__initMap(cdata, cdata_form, layout)
+    @__initMap(cdata, cdata_form, layout, opts)
 
 
   ##########################################################################
   # initialisiere Karte
-  __initMap: (cdata, cdata_form, layout) ->
+  __initMap: (cdata, cdata_form, layout, opts) ->
 
     that = @
 
@@ -105,7 +105,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     data = draw.getAll()
 
     # if geojson-data exists yet
-    if cdata.conceptURI != '' && cdata.conceptName != ''
+    if cdata.conceptURI != '' && cdata.conceptName != '' && cdata.conceptURI != undefined && cdata.conceptName != undefined
       geoJSON = JSON.parse(cdata.conceptURI)
       map.on 'load', ->
         map.addSource 'Georeferenzierung',
@@ -173,7 +173,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Point'
-            that.__updateResult(cdata, layout)
+            that.__updateResult(cdata, layout, opts)
         if type == 'LineString'
           if data.features[0].geometry.coordinates.length >= 2
             geoJSON = JSON.stringify(geoJSON)
@@ -185,7 +185,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'LineString'
-            that.__updateResult(cdata, layout)
+            that.__updateResult(cdata, layout, opts)
 
         if type == 'Polygon'
           if data.features[0].geometry.coordinates[0].length >= 3
@@ -198,7 +198,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'
-            that.__updateResult(cdata, layout)
+            that.__updateResult(cdata, layout, opts)
       return
 
     # add click listener on type-buttons
@@ -329,7 +329,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
   #######################################################################
   # update result in Masterform
-  __updateResult: (cdata, layout) ->
+  __updateResult: (cdata, layout, opts) ->
     that = @
     # if field is not empty
     if cdata?.conceptURI
