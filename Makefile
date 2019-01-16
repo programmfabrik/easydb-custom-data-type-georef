@@ -10,9 +10,8 @@ INSTALL_FILES = \
 	$(WEB)/l10n/cultures.json \
 	$(WEB)/l10n/de-DE.json \
 	$(WEB)/l10n/en-US.json \
-	$(WEB)/mapbox.css \
 	$(JS) \
-	 $(CSS) \
+	$(CSS) \
 	CustomDataTypeGeoref.config.yml
 
 COFFEE_FILES = easydb-library/src/commons.coffee \
