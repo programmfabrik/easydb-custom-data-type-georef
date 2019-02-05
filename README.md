@@ -16,6 +16,17 @@ As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
 
 * none
 
+## saved data
+
+* conceptName
+    * type of geoFeature (polygon, point, line)
+* conceptURI
+    * information in geoJSON-standard-format
+* _fulltext
+    * easydb-fulltext
+* _standard
+    * easydb-standard
+
 ## sources
 
 The source code of this plugin is managed in a git repository at <https://github.com/programmfabrik/easydb-custom-data-type-georef>. Please use [the issue tracker](https://github.com/programmfabrik/easydb-custom-data-type-georef/issues) for bug reports and feature requests!
