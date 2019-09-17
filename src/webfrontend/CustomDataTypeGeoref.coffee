@@ -303,9 +303,18 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
           encodedGeoJSON.properties['stroke'] = '#C20000'
           encodedGeoJSON = JSON.stringify(encodedGeoJSON)
           encodedGeoJSON = encodeURIComponent(encodedGeoJSON)
-          if vp.zoom > 16
-            vp.zoom = 15;
-          imageSrc = location.protocol + '//api.mapbox.com/v4/mapbox.streets-satellite/geojson(' + encodedGeoJSON + ')/' +  vp.center.join(',') + ',' + vp.zoom + '/' + size.join('x') + '@2x.png?access_token=' + mapbox_access_token
+          centerCoords = vp.center
+          if centerCoords[0] > 180
+            centerCoords[0] = centerCoords[0] - 360
+          if centerCoords[0] < -180
+            centerCoords[0] = centerCoords[0] + 360
+          centerCoords = centerCoords.join ','
+          zoomFaktor = vp.zoom
+          if zoomFaktor >= 2
+            zoomFaktor = zoomFaktor - 2
+          else if zoomFaktor == 1
+            zoomFaktor = 0
+          imageSrc = location.protocol + '//api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/static/geojson(' + encodedGeoJSON + ')/' +  centerCoords + ',' + zoomFaktor + '/500x300@2x?access_token=' + mapbox_access_token
           htmlContent = "<div style=\"width:500px; height: 300px; background-color: gray; background-image: url('" + imageSrc  + "'); background-repeat: no-repeat; background-position: center center; background-size: contain;\"></div>"
       else
         htmlContent = "no mapbox-access-token for georef"
