@@ -17,20 +17,20 @@ INSTALL_FILES = \
 COFFEE_FILES = easydb-library/src/commons.coffee \
 	src/webfrontend/CustomDataTypeGeoref.coffee
 
-MAPBOX1 = src/external/mapbox-gl.min.js
+MAPBOX1 = src/external/mapbox-gl.js
 MAPBOX2 = src/external/mapbox-gl-draw.js
 MAPBOX3 = src/external/geojson-extent.js
 MAPBOX4 = src/external/geo-viewport.js
 
+CSSGLDRAW = src/external/mapbox_gl_draw.css
 CSSADDITIONAL = src/external/mapbox.css
-
-SCSS_FILES = src/webfrontend/scss/main.scss
+CSS_FILE = src/webfrontend/css/main.css
 
 all: build
 
 include easydb-library/tools/base-plugins.make
 
-build: code css morecss
+build: code morecss
 
 code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
@@ -38,7 +38,9 @@ code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	cat $^ > build/webfrontend/custom-data-type-georef.js
 	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) >> build/webfrontend/custom-data-type-georef.js
 
-morecss: 
+morecss:
+	cat $(CSS_FILE) >> build/webfrontend/custom-data-type-georef.css
+	cat $(CSSGLDRAW) >> build/webfrontend/custom-data-type-georef.css
 	cat $(CSSADDITIONAL) >> build/webfrontend/custom-data-type-georef.css
 
 clean: clean-base

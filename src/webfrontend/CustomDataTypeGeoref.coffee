@@ -82,8 +82,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     # disable map rotation using touch rotation gesture
     map.touchZoomRotate.disableRotation()
 
-    nav = new mapboxgl.NavigationControl()
-    map.addControl(nav, 'top-left')
+    #nav = new mapboxgl.NavigationControl()
+    #map.addControl(nav, 'top-left')
 
     draw = new MapboxDraw(
       displayControlsDefault: false
