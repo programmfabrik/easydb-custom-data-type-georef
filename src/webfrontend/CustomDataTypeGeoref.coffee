@@ -183,13 +183,16 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             that.__updateResult(cdata, layout, opts)
 
         if type == 'Polygon'
-          if data.features[0].geometry.coordinates[0].length >= 3
+          # Each LinearRing of a Polygon must have 4 or more Positions
+          if data.features[0].geometry.coordinates[0].length >= 5
+            polygonCoords = data.features[0].geometry.coordinates
+
+            # rewind the polygon to right hand rule (geojson-spec 1.0)
+            turfPolygon = turf.polygon.polygon(polygonCoords)
+            rewind = turf.rewind(turfPolygon);
+            geoJSON.geometry.coordinates = rewind.geometry.coordinates
             geoJSON = JSON.stringify(geoJSON)
-            polygon = data.features[0].geometry.coordinates[0]
-            polygonPoints = new Array
-            for value in polygon
-              polygonPoints.push value.join(' ')
-            polygonPoints = polygonPoints.join(',')
+
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'

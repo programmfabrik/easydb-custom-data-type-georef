@@ -22,6 +22,8 @@ MAPBOX2 = src/external/mapbox-gl-draw.js
 MAPBOX3 = src/external/geojson-extent.js
 MAPBOX4 = src/external/geo-viewport.js
 
+TURF_REWIND = src/external/turfRewind.js
+
 CSSGLDRAW = src/external/mapbox_gl_draw.css
 CSSADDITIONAL = src/external/mapbox.css
 CSS_FILE = src/webfrontend/css/main.css
@@ -36,7 +38,7 @@ code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
 	mkdir -p build/webfrontend
 	cat $^ > build/webfrontend/custom-data-type-georef.js
-	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) >> build/webfrontend/custom-data-type-georef.js
+	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) $(TURF_REWIND) >> build/webfrontend/custom-data-type-georef.js
 
 morecss:
 	cat $(CSS_FILE) >> build/webfrontend/custom-data-type-georef.css
