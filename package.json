@@ -1,0 +1,18 @@
+{
+  "name": "easydb-custom-data-type-georef",
+  "homepage": "https://github.com/programmfabrik/easydb-custom-data-type-georef",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/programmfabrik/easydb-custom-data-type-georef"
+  },
+  "license": "SEE LICENSE IN https://github.com/programmfabrik/easydb-custom-data-type-georef/blob/master/LICENSE",
+  "dependencies": {
+    "@turf/turf": "^5.1.6"
+  },
+  "devDependencies": {
+    "coffee-loader": "^2.0.0",
+    "coffeescript": "^2.5.1",
+    "webpack": "^5.11.0",
+    "webpack-cli": "^4.3.1"
+  }
+}

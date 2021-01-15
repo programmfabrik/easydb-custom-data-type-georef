@@ -4,11 +4,13 @@ L10N_FILES = easydb-library/src/commons.l10n.csv \
     l10n/$(PLUGIN_NAME).csv
 L10N_GOOGLE_KEY = 1ux8r_kpskdAwTaTjqrk92up5eyyILkpsv4k96QltmI0
 L10N_GOOGLE_GID = 1569075372
+L10N2JSON = python easydb-library/tools/l10n2json.py
 
 INSTALL_FILES = \
 	$(WEB)/l10n/cultures.json \
 	$(WEB)/l10n/de-DE.json \
 	$(WEB)/l10n/en-US.json \
+	build/updater/georef-update.js \
 	$(JS) \
 	$(CSS) \
 	CustomDataTypeGeoref.config.yml
@@ -31,7 +33,7 @@ all: build
 
 include easydb-library/tools/base-plugins.make
 
-build: code morecss
+build: code morecss npm_install updater
 
 code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
@@ -43,5 +45,12 @@ morecss:
 	cat $(CSS_FILE) >> build/webfrontend/custom-data-type-georef.css
 	cat $(CSSGLDRAW) >> build/webfrontend/custom-data-type-georef.css
 	cat $(CSSADDITIONAL) >> build/webfrontend/custom-data-type-georef.css
+
+npm_install:
+	npm install
+	cp -r node_modules build/node_modules
+
+updater:
+	./node_modules/webpack/bin/webpack.js --config src/updater/webpack.config.js
 
 clean: clean-base

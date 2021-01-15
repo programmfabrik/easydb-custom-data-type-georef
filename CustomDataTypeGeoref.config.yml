@@ -1,6 +1,6 @@
 plugin:
   name: custom-data-type-georef
-  version: 1.2
+  version: 1.25
   url: https://github.com/programmfabrik/easydb-custom-data-type-georef
   displayname:
     de-DE: georef-Verknüpfung
@@ -17,6 +17,11 @@ plugin:
     css: custom-data-type-georef.css
 custom_types:
   georef:
+    update:
+      script: build/updater/georef-update.js
+      timeout: 60
+      batch_size: 100
+      interval_base_config: update_interval_georef.days    
     mapping:
       conceptName:
         type: text
@@ -28,3 +33,12 @@ custom_types:
           parameters:
             value:
               type: text
+base_config:
+  - name: update_interval_georef
+    group: update_custom_data_type
+    parameters:
+      days:
+        type: int
+        min: 0
+        default: 0
+        position: 0
