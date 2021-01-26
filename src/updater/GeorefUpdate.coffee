@@ -1,4 +1,5 @@
-turf = require('@turf/turf');
+turf_polygon = require('@turf/helpers')
+turf_rewind = require('@turf/rewind')
 
 class GeorefUpdate
 
@@ -17,9 +18,13 @@ class GeorefUpdate
         georefFeature = JSON.parse georefJSON.data.conceptURI
         # rewind the polygon to right hand rule (geojson-spec 1.0)
         polygonCoords = georefFeature.geometry.coordinates
+        console.error "turf_rewind", turf_rewind
+
         if polygonCoords[0].length >= 5
-          turfPolygon = turf.polygon(polygonCoords)
-          rewind = turf.rewind(turfPolygon);
+          turfPolygon = turf_polygon.polygon(polygonCoords)
+          console.error "turfPolygon before", JSON.stringify (turfPolygon)
+          rewind = turf_rewind(turfPolygon);
+          console.error "rewinded after", JSON.stringify ( rewind )
           georefFeature.geometry.coordinates = rewind.geometry.coordinates
           georefJSON.data.conceptURI = JSON.stringify(georefFeature)
           objectsToUpdate.push georefJSON

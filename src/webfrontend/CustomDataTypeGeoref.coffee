@@ -102,6 +102,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     # if geojson-data exists yet
     if cdata.conceptURI != '' && cdata.conceptName != '' && cdata.conceptURI != undefined && cdata.conceptName != undefined
       geoJSON = JSON.parse(cdata.conceptURI)
+      console.warn "geoJSON", geoJSON
       map.on 'load', ->
         map.addSource 'Georeferenzierung',
           'type': 'geojson'
@@ -150,7 +151,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
               ]
               'text-anchor': 'top'
         # get bounds of formlayer
-        map.fitBounds geojsonExtent(geoJSON), padding: 20
+        if(data?.features[0]?.length > 0)
+          map.fitBounds geojsonExtent(geoJSON), padding: 20
         return
 
     # click on map
@@ -186,12 +188,26 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
           # Each LinearRing of a Polygon must have 4 or more Positions
           if data.features[0].geometry.coordinates[0].length >= 5
             polygonCoords = data.features[0].geometry.coordinates
-
-            # rewind the polygon to right hand rule (geojson-spec 1.0)
+            # make turf-polygon from coords
             turfPolygon = turf.polygon.polygon(polygonCoords)
-            rewind = turf.rewind(turfPolygon);
-            geoJSON.geometry.coordinates = rewind.geometry.coordinates
-            geoJSON = JSON.stringify(geoJSON)
+
+            # check for selfintersections polygon, kink polygon
+            kinks = turf.kinks.default(turfPolygon)
+            if kinks.features.length > 0
+              alert($$('custom.data.type.georef.edit.selfintersectingerror'))
+              data.features[0].geometry.coordinates = []
+              map.removeLayer('Georeferenzierung')
+              map.removeSource('Georeferenzierung')
+              draw.trash()
+              draw.deleteAll()
+              geoJSON.geometry.coordinates = []
+              geoJSON = JSON.stringify(geoJSON)
+            else
+              # rewind the polygon to right hand rule (geojson-spec 1.0)
+              turfPolygon = turf.polygon.polygon(polygonCoords)
+              rewind = turf.rewind(turfPolygon);
+              geoJSON.geometry.coordinates = rewind.geometry.coordinates
+              geoJSON = JSON.stringify(geoJSON)
 
             # lock in save data
             cdata.conceptURI = geoJSON
@@ -285,7 +301,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     that = @
     mapContent = new CUI.Label
                   text: $$('custom.data.type.georef.edit.kartenansicht')
-    htmlContent = 'no map available'
+    htmlContent = $$('custom.data.type.georef.edit.novalidmap')
     # read mapbox_access_token from schema
     if that.getCustomSchemaSettings().mapbox_access_token?.value
         mapbox_access_token = that.getCustomSchemaSettings().mapbox_access_token?.value
