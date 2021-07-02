@@ -31,7 +31,7 @@ all: build
 
 include easydb-library/tools/base-plugins.make
 
-build: code morecss
+build: code morecss buildinfojson
 
 code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
