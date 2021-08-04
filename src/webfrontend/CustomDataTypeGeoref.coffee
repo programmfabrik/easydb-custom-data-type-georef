@@ -82,8 +82,14 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     # disable map rotation using touch rotation gesture
     map.touchZoomRotate.disableRotation()
 
-    #nav = new mapboxgl.NavigationControl()
-    #map.addControl(nav, 'top-left')
+    # add geocoder?
+    if @getCustomSchemaSettings().use_geocoder?.value == true
+      frontendLanguage = frontendLanguages = ez5.loca.getLanguage()
+      geocoder = new MapboxGeocoder(
+        accessToken: mapboxgl.accessToken
+        language: frontendLanguage
+        mapboxgl: mapboxgl)
+      map.addControl(geocoder, 'top-left');
 
     draw = new MapboxDraw(
       displayControlsDefault: false
@@ -490,6 +496,11 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       tags.push "✓ Mapbox-Access-Token"
     else
       tags.push "✘ Mapbox-Access-Token"
+
+    if custom_settings.use_geocoder?.value
+      tags.push "✓ Geocoder"
+    else
+      tags.push "✘ Geocoder"
 
     tags
 

@@ -28,3 +28,7 @@ custom_types:
           parameters:
             value:
               type: text
+        - name: use_geocoder
+          parameters:
+            value:
+              type: bool

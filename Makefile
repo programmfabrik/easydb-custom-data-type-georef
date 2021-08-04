@@ -20,11 +20,13 @@ MAPBOX1 = src/external/mapbox-gl.js
 MAPBOX2 = src/external/mapbox-gl-draw.js
 MAPBOX3 = src/external/geojson-extent.js
 MAPBOX4 = src/external/geo-viewport.js
+MAPBOX5 = src/external/mapbox-gl-geocoder.min.js
 
 TURF_REWIND = src/external/turfRewind.js
 
 CSSGLDRAW = src/external/mapbox_gl_draw.css
 CSSADDITIONAL = src/external/mapbox.css
+CSSGEOCODER = src/external/mapbox-gl-geocoder.css
 CSS_FILE = src/webfrontend/css/main.css
 
 all: build
@@ -37,10 +39,11 @@ code: $(subst .coffee,.coffee.js,${COFFEE_FILES}) $(L10N)
 	mkdir -p build
 	mkdir -p build/webfrontend
 	cat $^ > build/webfrontend/custom-data-type-georef.js
-	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) $(TURF_REWIND) >> build/webfrontend/custom-data-type-georef.js
+	cat $(MAPBOX1) $(MAPBOX2) $(MAPBOX3) $(MAPBOX4) $(MAPBOX5) $(TURF_REWIND) >> build/webfrontend/custom-data-type-georef.js
 
 morecss:
 	cat $(CSS_FILE) >> build/webfrontend/custom-data-type-georef.css
+	cat $(CSSGEOCODER) >> build/webfrontend/custom-data-type-georef.css		
 	cat $(CSSGLDRAW) >> build/webfrontend/custom-data-type-georef.css
 	cat $(CSSADDITIONAL) >> build/webfrontend/custom-data-type-georef.css
 
