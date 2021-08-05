@@ -17,6 +17,7 @@ As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
 ### Schema options
 
 * which "mapquest-API-key" to use
+* if "geocoder" is activated for adresssearch
 
 ### Mask options
 
@@ -36,4 +37,3 @@ As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
 ## sources
 
 The source code of this plugin is managed in a git repository at <https://github.com/programmfabrik/easydb-custom-data-type-georef>. Please use [the issue tracker](https://github.com/programmfabrik/easydb-custom-data-type-georef/issues) for bug reports and feature requests!
-
