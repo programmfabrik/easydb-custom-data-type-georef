@@ -88,6 +88,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       geocoder = new MapboxGeocoder(
         accessToken: mapboxgl.accessToken
         language: frontendLanguage
+        marker: false
         mapboxgl: mapboxgl)
       map.addControl(geocoder, 'top-left');
 
