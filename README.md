@@ -16,7 +16,7 @@ As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
 
 ### Schema options
 
-* which "mapquest-API-key" to use
+* which "mapbpox-API-key" to use
 * if "geocoder" is activated for adresssearch
 
 ### Mask options
