@@ -43,8 +43,21 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
         # "reset"-button
         content: xmapboxpane
+      onHide: =>
+        @__updateResult(cdata, layout, opts)
     .show()
+
     @__initMap(cdata, cdata_form, layout, opts)
+
+
+  getMapboxAccessToken: () ->
+    mapbox_access_token = ''
+    if @getCustomSchemaSettings().mapbox_access_token?.value
+      mapbox_access_token = @getCustomSchemaSettings().mapbox_access_token?.value
+    else
+      console.log "Kein Mapbox-Api-Key gegeben!"
+      mapbox_access_token = false
+    mapbox_access_token
 
 
   ##########################################################################
@@ -53,13 +66,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
     that = @
 
-    mapbox_access_token = ''
-    if @getCustomSchemaSettings().mapbox_access_token?.value
-      mapbox_access_token = @getCustomSchemaSettings().mapbox_access_token?.value
-    else
-      console.log "Kein Mapbox-Api-Key gegeben!"
-
-    mapboxgl.accessToken = mapbox_access_token
+    mapboxgl.accessToken = that.getMapboxAccessToken()
     container = document.getElementsByClassName('georef_mapbox_container')[0]
 
     # remove all style + classes + content from container
@@ -74,6 +81,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         style: 'mapbox://styles/mapbox/satellite-streets-v10'
         center: [9.935,51.5338]
         zoom: 5
+        maxZoom: 20
     });
 
     # disable map rotation using right click + drag
@@ -109,53 +117,14 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     # if geojson-data exists yet
     if cdata.conceptURI != '' && cdata.conceptName != '' && cdata.conceptURI != undefined && cdata.conceptName != undefined
       geoJSON = JSON.parse(cdata.conceptURI)
+
       map.on 'load', ->
         map.addSource 'Georeferenzierung',
           'type': 'geojson'
           'data': geoJSON
-        # für Polygone
-        if geoJSON.geometry.type == 'Polygon'
-          map.addLayer
-            'id': 'Georeferenzierung'
-            'type': 'fill'
-            'source': 'Georeferenzierung'
-            'interactive': true
-            'layout': {}
-            'paint':
-              'fill-color': '#C20000'
-              'fill-opacity': 0.5
-        # für Linien
-        if geoJSON.geometry.type == 'LineString'
-          map.addLayer
-            'id': 'Georeferenzierung'
-            'type': 'line'
-            'source': 'Georeferenzierung'
-            'interactive': true
-            'layout':
-              'line-join': 'round'
-              'line-cap': 'round'
-            'paint':
-              'line-color': '#C20000'
-              'line-width': 4
-        # für Punkte
-        if geoJSON.geometry.type == 'Point'
-          map.addLayer
-            'id': 'Georeferenzierung'
-            'type': 'symbol'
-            'source': 'Georeferenzierung'
-            'interactive': true
-            'layout':
-              'icon-image': 'embassy-15'
-              'text-field': ''
-              'text-font': [
-                'Open Sans Semibold'
-                'Arial Unicode MS Bold'
-              ]
-              'text-offset': [
-                0
-                0.6
-              ]
-              'text-anchor': 'top'
+
+        that.addMapLayers(map, 'Georeferenzierung', 'Georeferenzierung', true)
+
         # get bounds of formlayer
         map.fitBounds geojsonExtent(geoJSON), padding: 20
         return
@@ -175,7 +144,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Point'
-            that.__updateResult(cdata, layout, opts)
+            #that.__updateResult(cdata, layout, opts)
+
         if type == 'LineString'
           if data.features[0].geometry.coordinates.length >= 2
             geoJSON = JSON.stringify(geoJSON)
@@ -187,13 +157,12 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'LineString'
-            that.__updateResult(cdata, layout, opts)
+            #that.__updateResult(cdata, layout, opts)
 
         if type == 'Polygon'
           # Each LinearRing of a Polygon must have 4 or more Positions
           if data.features[0].geometry.coordinates[0].length >= 5
             polygonCoords = data.features[0].geometry.coordinates
-
             # rewind the polygon to right hand rule (geojson-spec 1.0)
             turfPolygon = turf.polygon.polygon(polygonCoords)
             rewind = turf.rewind(turfPolygon);
@@ -203,40 +172,26 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'
-            that.__updateResult(cdata, layout, opts)
+            #that.__updateResult(cdata, layout, opts)
       return
 
     # add click listener on type-buttons
     typebuttons = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn')
 
-    # click on "type" button (polygon, line, point)
-    checkFormCount = ->
-
+    # remove existing features, if click on "add feature".
+    removeExistingFeatures = ->
       # reset form
       cdata.conceptURI = ''
       cdata.conceptName = ''
-
-      # check if only one form, else delete others
       data = draw.getAll();
-      if data.features
-        if data.features.length > 1
-          if data.features[0].geometry.coordinates.length > 0
-            # disable "save"button
+      draw.deleteAll()
 
-            # delete all current features
-            draw.deleteAll()
-            # trigger click on button to return to ready-status    ###
-            xselectorArr = document.querySelector('.mapbox-gl-draw_ctrl-draw-btn.active').className.split(' ')
-            xselector = '.' + xselectorArr[0] + '.' + xselectorArr[1]
-            document.querySelector(xselector).click();
-            document.querySelector(xselector).click();
-      return
-
+    # click on "type" button (polygon, line, point)
+    # --> delete "old" geometrys and clear cdata
     i = 0
     while i < typebuttons.length
-      typebuttons[i].addEventListener 'click', checkFormCount, false
+      typebuttons[i].addEventListener 'mousedown', removeExistingFeatures, false
       i++
-
 
 
   #########################################################################
@@ -287,59 +242,110 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
 
   #######################################################################
-  # generates static mapbox-map via geojson
-  __getStaticMapboxMap: (cdata) ->
-    that = @
-    mapContent = new CUI.Label
-                  text: $$('custom.data.type.georef.edit.kartenansicht')
-    htmlContent = 'no map available'
-    # read mapbox_access_token from schema
-    if that.getCustomSchemaSettings().mapbox_access_token?.value
-        mapbox_access_token = that.getCustomSchemaSettings().mapbox_access_token?.value
-    if mapbox_access_token
-        # compare to https://www.mapbox.com/mapbox.js/example/v1.0.0/static-map-from-geojson-with-geo-viewport/
-        jsonStr = '{"type": "FeatureCollection","features": []}'
-        json = JSON.parse(jsonStr)
-        json.features.push JSON.parse(cdata.conceptURI)
-        bounds = geojsonExtent(json)
-        if bounds
-          size = [
-            500
-            300
-          ]
-          vp = geoViewport.viewport(bounds, size)
-          encodedGeoJSON = JSON.parse(cdata.conceptURI)
-          encodedGeoJSON.properties['stroke-width'] = 4
-          encodedGeoJSON.properties['stroke'] = '#C20000'
-          encodedGeoJSON = JSON.stringify(encodedGeoJSON)
-          encodedGeoJSON = encodeURIComponent(encodedGeoJSON)
-          centerCoords = vp.center
-          if centerCoords[0] > 180
-            centerCoords[0] = centerCoords[0] - 360
-          if centerCoords[0] < -180
-            centerCoords[0] = centerCoords[0] + 360
-          centerCoords = centerCoords.join ','
-          zoomFaktor = vp.zoom
-          if zoomFaktor >= 2
-            zoomFaktor = zoomFaktor - 2
-          else if zoomFaktor == 1
-            zoomFaktor = 0
-          imageSrc = location.protocol + '//api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/static/geojson(' + encodedGeoJSON + ')/' +  centerCoords + ',' + zoomFaktor + '/500x300@2x?access_token=' + mapbox_access_token
-          htmlContent = "<div style=\"width:500px; height: 300px; background-color: gray; background-image: url('" + imageSrc  + "'); background-repeat: no-repeat; background-position: center center; background-size: contain;\"></div>"
-      else
-        htmlContent = "no mapbox-access-token for georef"
-    mapContent.DOM.innerHTML = htmlContent
-    mapContent
+  # add various map layers for the different featuretypes
+  addMapLayers: (map, source, id, interactive) ->
+    # für Polygone
+    map.addLayer
+      'id': 'layerPolygon'
+      'type': 'fill'
+      'source': source
+      'interactive': interactive
+      'layout': {}
+      'paint':
+        'fill-color': '#C20000'
+        'fill-opacity': 0.5
+      'filter': ['==', '$type', 'Polygon']
+    # für Linien
+    map.addLayer
+      'id': 'layerLineString'
+      'type': 'line'
+      'source': source
+      'interactive': interactive
+      'layout':
+        'line-join': 'round'
+        'line-cap': 'round'
+      'paint':
+        'line-color': '#C20000'
+        'line-width': 4
+      'filter': ['==', '$type', 'LineString']
+    # für Punkte
+    map.addLayer
+      'id': 'layerPoint'
+      'type': 'symbol'
+      'source': source
+      'interactive': interactive
+      'layout':
+        'icon-image': 'embassy-15'
+        'text-field': ''
+        'text-font': [
+          'Open Sans Semibold'
+          'Arial Unicode MS Bold'
+        ]
+        'text-offset': [
+          0
+          0.6
+        ]
+        'text-anchor': 'top'
+      'filter': ['==', '$type', 'Point']
 
   #######################################################################
   # generates static mapbox-map via geojson
-
-  __getUsuableMapboxMap: (cdata) ->
+  initStaticMap:(containerID, cdata, parentNode) ->
     that = @
-    mapContent = new CUI.Label
-                  text: $$('custom.data.type.georef.edit.kartenansicht')
-    "__getUsuableMapboxMap"
+    timeout = 200
 
+    # if container exists yet --> don't set a timeout
+    container = CUI.dom.findElement(parentNode.DOM, "#" + containerID)
+    if container
+      timeout = 0
+
+    setTimeout ->
+
+      container = CUI.dom.findElement(parentNode.DOM, "#" + containerID)
+
+      mapbox_access_token = that.getMapboxAccessToken()
+      if mapbox_access_token
+        mapboxgl.accessToken = mapbox_access_token
+
+        mapContent = new CUI.Label
+                      text: $$('custom.data.type.georef.edit.kartenansicht')
+
+        geojsonFromCdata = JSON.parse(cdata.conceptURI)
+
+        # if this is not a FeatureCollection yet
+        if geojsonFromCdata?.type != "FeatureCollection"
+          jsonStr = '{"type": "FeatureCollection","features": []}'
+          geoJSON = JSON.parse(jsonStr)
+          geoJSON.features.push geojsonFromCdata
+        else
+          geoJSON = geojsonFromCdata
+
+        map = new mapboxgl.Map({
+            container: container
+            style: 'mapbox://styles/mapbox/satellite-streets-v10'
+            center: [9.935,51.5338]
+            zoom: 5
+            maxZoom: 17
+            attributionControl: false,
+            interactive: false
+        });
+        map.on 'load', ->
+          if geojsonFromCdata
+            # create
+            map.addSource 'Georeferenzierung',
+              'type': 'geojson'
+              'data': geoJSON
+
+            that.addMapLayers(map, 'Georeferenzierung', 'Georeferenzierung', false)
+            map.fitBounds geojsonExtent(geoJSON), padding: 20
+
+          map.on 'idle', ->
+            map.resize()
+          # Add zoom and rotation controls to the map.
+          map.addControl(new mapboxgl.NavigationControl());
+      else
+        console.error "no mapbox-access-token for georef"
+    , timeout
 
   #######################################################################
   # update result in Masterform
@@ -358,13 +364,10 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         uriParts.push(uuid)
         displayURI = uriParts.join('/')
 
-      mapContent = @__getStaticMapboxMap(cdata)
-
       copyrightLabel = new CUI.Label
                       text: "Copyright"
                       size: "mini"
       copyrightLabel.DOM.innerHTML = "©&nbsp;<a href='https://www.mapbox.com/about/maps/'>Mapbox</a>&nbsp;&nbsp;©&nbsp;<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>&nbsp;&nbsp;<strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>";
-
 
       info = new CUI.VerticalLayout
         class: 'ez5-info_commonPlugin'
@@ -379,13 +382,26 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                       content:
                         new CUI.Label
                           text: cdata.conceptName + ' (' + $$('custom.data.type.georef.edit.kartenansicht') + ')'
-                    right:
-                      content: [
-                        #CUI.Pane.getToggleFillScreenButton()
-                      ]
                 ]
               center:
-                content: mapContent
+                content:
+                  new CUI.SimplePane
+                      id: "georef_mapbox_container_static"
+                      class: "georef_mapbox_container_static"
+                      content:
+                          new CUI.Label
+                              text: ""
+              bottom:
+                content: [
+                  new CUI.PaneFooter
+                    left:
+                      content: copyrightLabel
+                    right:
+                      content: ""
+                ]
+
+      # load static map to container
+      that.initStaticMap('georef_mapbox_container_static', cdata, layout)
 
       layout.replace(info, 'center')
       layout.addClass('ez5-linked-object-edit')
@@ -436,8 +452,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       when "invalid"
         return new CUI.EmptyLabel(text: $$("custom.data.type.georef.edit.no_valid_georef")).DOM
 
-    mapContent = @__getStaticMapboxMap(cdata)
-
     copyrightLabel = new CUI.Label
                     text: "Copyright"
                     size: "mini"
@@ -454,11 +468,17 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                   text: cdata.conceptName + ' (' + $$('custom.data.type.georef.edit.kartenansicht') + ')'
             right:
               content: [
-                #CUI.Pane.getToggleFillScreenButton()
+                CUI.Pane.getToggleFillScreenButton()
               ]
         ]
       center:
-        content: mapContent
+        content:
+          new CUI.SimplePane
+              id: "georef_mapbox_container_static"
+              class: "georef_mapbox_container_static"
+              content:
+                  new CUI.Label
+                      text: ""
       bottom:
         content: [
           new CUI.PaneFooter
@@ -468,22 +488,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
               content: ""
         ]
 
-    CUI.Events.listen
-       type: ["start-fill-screen", "end-fill-screen"]
-       node: mapPane
-       call: (ev) =>
-          console.log "Event:", ev
-          eventType = ev._type
-          # if fullsize show usable map
-          if (eventType == 'start-fill-screen')
-            console.log "start-fill-screen"
-            mapPane.replace(@__getUsuableMapboxMap(cdata), "center")
-          # if normal view show small static map
-          if (eventType == 'end-fill-screen')
-            console.log "end-fill-screen"
-            mapPane.replace(@__getStaticMapboxMap(cdata), "center")
-          console.log "fertig eventiert"
-
+    # load static map to container
+    that.initStaticMap('georef_mapbox_container_static', cdata, mapPane)
 
     mapPane.DOM
 

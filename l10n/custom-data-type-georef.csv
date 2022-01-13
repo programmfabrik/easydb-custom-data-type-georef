@@ -18,3 +18,4 @@ custom.data.type.georef.edit.linked_georef,Verknüpfte Georeferenzierung,Linked 
 custom.data.type.georef.edit.kartenansicht,Kartenansicht,Map,,
 custom.data.type.georef.config.parameter.schema.use_geocoder.value.label,Geocoder,Geocoder,,
 custom.data.type.georef.config.parameter.schema.use_geocoder.value.checkbox,Fügt der Karte ein Geokodierungs-Steuerelement hinzu mit dem Sie die Karte nach einem Ort durchsuchen können,adds a geocoding control to the map which enables you to search the map for a place,,
+custom.data.type.georef.modal.form.text.georef_empty,noch keine Georeferenzierung,no georeferencing yet,,
