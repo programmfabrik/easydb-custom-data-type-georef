@@ -13,6 +13,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   #######################################################################
   # show popover and fill it with the form-elements
   showEditPopover: (btn, data, cdata, layout, opts) ->
+    console.log "f: showEditPopover"
     cdata_form = new CUI.Form
       data: cdata
       fields: @__getEditorFields(cdata)
@@ -350,6 +351,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   #######################################################################
   # update result in Masterform
   __updateResult: (cdata, layout, opts) ->
+    console.log "f: __updateResult"
+    console.log "cdata", cdata
     that = @
     # if field is not empty
     if cdata?.conceptURI
@@ -411,6 +414,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
     # if field is empty, display searchfield
     if ! cdata?.conceptURI
+      console.log "cdata is empty"
+      console.log "opts", opts
       suggest_Menu_directInput
 
       inputX = new CUI.Input
@@ -437,7 +442,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       layout.__initPane(options, 'center')
 
     # did data change?
-    that.__setEditorFieldStatus(cdata, layout)
+    if ! opts?.deleteDataFromPlugin == true
+      that.__setEditorFieldStatus(cdata, layout)
 
 
   #######################################################################
