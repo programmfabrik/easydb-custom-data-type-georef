@@ -143,7 +143,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Point'
-            #that.__updateResult(cdata, layout, opts)
 
         if type == 'LineString'
           if data.features[0].geometry.coordinates.length >= 2
@@ -156,7 +155,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'LineString'
-            #that.__updateResult(cdata, layout, opts)
 
         if type == 'Polygon'
           # Each LinearRing of a Polygon must have 4 or more Positions
@@ -171,7 +169,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'
-            #that.__updateResult(cdata, layout, opts)
       return
 
     # add click listener on type-buttons
@@ -439,6 +436,259 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     if ! opts?.deleteDataFromPlugin == true
       that.__setEditorFieldStatus(cdata, layout)
 
+  ##########################################################
+  # custom add-new-Buttons for burger-menu
+  ##########################################################
+  getCustomButtonBarEntryForTextInput: (that, data, cdata, opts={}) ->
+    that.modal = {}
+
+    newCustomBarEntrys = []
+
+    ##########################################################
+    # if textinput for POINT is allowed
+    ##########################################################
+    if that.getCustomSchemaSettings()?.allow_textinput_point?.value == true
+      addNewPoint =
+          text: $$('custom.data.type.georef.controls.addnew.point.label')
+          value: 'new'
+          name: 'addnewPointFromGEOREFPlugin'
+          icon_left: new CUI.Icon(class: "fa-plus")
+          onClick: =>
+            pointForm = new CUI.Form
+                          name: "pointForm"
+                          class: "georefTextInputForm"
+                          fields: [
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.latitude")
+                              hint: $$("custom.data.type.georef.add_new.modal.form.latitude.hint")
+                            type: CUI.Input
+                            name: "georef_add_new_point.latitude"
+                          ,
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.longitude")
+                              hint: $$("custom.data.type.georef.add_new.modal.form.longitude.hint")
+                            type: CUI.Input
+                            name: "georef_add_new_point.longitude"
+                          ]
+            pointForm.start()
+
+            that.dotsButtonMenu.hide()
+            that.modal = new CUI.Modal
+                placement: "c"
+                pane:
+                    class: "cui-pane"
+                    header_left: new CUI.Label( text: $$("custom.data.type.georef.add_new.point.header_left"))
+                    content: pointForm
+                    footer_right: =>
+                        [
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.cancel_button")
+                            class: "cui-dialog"
+                            onClick: =>
+                              that.modal.destroy()
+                        ,
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.ok")
+                            class: "cui-dialog"
+                            onClick: =>
+                              # get info from form
+                              latitude = pointForm.getFieldsByName('georef_add_new_point.latitude')[0].getValue()
+                              longitude = pointForm.getFieldsByName('georef_add_new_point.longitude')[0].getValue()
+
+                              floatLatitude = parseFloat(latitude);
+                              floatLongitude = parseFloat(longitude);
+
+                              if (!isNaN(floatLatitude) && !isNaN(floatLongitude))
+                                # build geojson
+                                pointGeoJSON = '{ "type": "Feature", "properties": {}, "geometry": { "coordinates": [ ' + floatLatitude + ', ' + floatLongitude + ' ], "type": "Point" } }'
+                                # change cdata and apply
+                                cdata.conceptURI = pointGeoJSON
+                                cdata.conceptName = 'Point'
+                                that.__updateResult(cdata, that.layout, opts)
+                                that.modal.destroy()
+                              else
+                                CUI.alert(text: $$("custom.data.type.georef.add_new.modal.error"))
+                        ]
+            that.modal.show()
+            that.modal.autoSize()
+      newCustomBarEntrys.push addNewPoint
+
+    ##########################################################
+    # if textinput for LINESTRING is allowed
+    ##########################################################
+    if that.getCustomSchemaSettings()?.allow_textinput_linestring?.value == true
+      addNewLineString =
+          text: $$('custom.data.type.georef.controls.addnew.linestring.label')
+          value: 'new'
+          name: 'addnewLineStringFromGEOREFPlugin'
+          icon_left: new CUI.Icon(class: "fa-plus")
+          onClick: =>
+            lineStringForm =  new CUI.Form
+                          name: "lineStringForm"
+                          class: "georefTextInputForm"
+                          fields: [
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.linestring")
+                            type: CUI.Input
+                            name: "georef_add_new_point.linestring"
+                            textarea: true
+                          ,
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.hintlabel")
+                              hint: $$("custom.data.type.georef.add_new.modal.form.linestring.examples")
+                            type: CUI.Output
+                            text: $$("custom.data.type.georef.add_new.modal.form.linestring.hints")
+                          ]
+            lineStringForm.start()
+            that.dotsButtonMenu.hide()
+            that.modal = new CUI.Modal
+                placement: "c"
+                pane:
+                    class: "cui-pane"
+                    header_left: new CUI.Label( text: $$("custom.data.type.georef.add_new.linestring.header_left"))
+                    content: lineStringForm
+                    footer_right: =>
+                        [
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.cancel_button")
+                            class: "cui-dialog"
+                            onClick: =>
+                              that.modal.destroy()
+                        ,
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.ok")
+                            class: "cui-dialog"
+                            onClick: =>
+                              # get info from form
+                              geoJSONLineStringStr = lineStringForm.getFieldsByName('georef_add_new_point.linestring')[0].getValue()
+                              try
+                                geoJSONLineString = JSON.parse(geoJSONLineStringStr)
+
+                                isValidLineString = Array.isArray(geoJSONLineString) &&
+                                  geoJSONLineString.every((coord) ->
+                                    Array.isArray(coord) &&
+                                    coord.length == 2 &&
+                                    coord.every((val) -> typeof val == 'number' && !isNaN(val))
+                                  )
+                                if isValidLineString
+                                  # build geojson
+                                  lineStringGeoJSON = '{ "type": "Feature", "properties": {}, "geometry": { "coordinates": ' + geoJSONLineStringStr + ', "type": "LineString" } }'
+                                  # change cdata and apply
+                                  cdata.conceptURI = lineStringGeoJSON
+                                  cdata.conceptName = 'LineString'
+                                  that.__updateResult(cdata, that.layout, opts)
+                                  that.modal.destroy()
+                                else
+                                  CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
+                              catch error
+                                CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
+                        ]
+            that.modal.show()
+            that.modal.autoSize()
+      newCustomBarEntrys.push addNewLineString
+
+    ##########################################################
+    # if textinput for POLYGON is allowed
+    ##########################################################
+    if that.getCustomSchemaSettings()?.allow_textinput_polygon?.value == true
+      addNewPolygon =
+          text: $$('custom.data.type.georef.controls.addnew.polygon.label')
+          value: 'new'
+          name: 'addnewPolygpnFromGEOREFPlugin'
+          icon_left: new CUI.Icon(class: "fa-plus")
+          onClick: =>
+            polygonForm =  new CUI.Form
+                          name: "polygonForm"
+                          class: "georefTextInputForm"
+                          fields: [
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.polygon")
+                            type: CUI.Input
+                            name: "georef_add_new_point.polygon"
+                            textarea: true
+                          ,
+                            form:
+                              label: $$("custom.data.type.georef.add_new.modal.form.hintlabel")
+                              hint: $$("custom.data.type.georef.add_new.modal.form.polygon.examples")
+                            type: CUI.Output
+                            text: $$("custom.data.type.georef.add_new.modal.form.polygon.hints")
+                          ]
+            polygonForm.start()
+            that.dotsButtonMenu.hide()
+            that.modal = new CUI.Modal
+                placement: "c"
+                pane:
+                    class: "cui-pane"
+                    header_left: new CUI.Label( text: $$("custom.data.type.georef.add_new.polygon.header_left"))
+                    content: polygonForm
+                    footer_right: =>
+                        [
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.cancel_button")
+                            class: "cui-dialog"
+                            onClick: =>
+                              that.modal.destroy()
+                        ,
+                          new CUI.Button
+                            text: $$("custom.data.type.georef.add_new.modal.ok")
+                            class: "cui-dialog"
+                            onClick: =>
+                              # get info from form
+                              geoJSONPolygonStr = polygonForm.getFieldsByName('georef_add_new_point.polygon')[0].getValue()
+                              try
+                                geoJSONPolygon = JSON.parse(geoJSONPolygonStr)
+
+                                isValidPolygon = Array.isArray(geoJSONPolygon) &&
+                                  geoJSONPolygon.length == 1 &&
+                                  geoJSONPolygon[0].length >= 4 &&
+                                  geoJSONPolygon[0].every((coord) ->
+                                    Array.isArray(coord) &&
+                                    coord.length == 2 &&
+                                    coord.every((val) -> typeof val == 'number' && !isNaN(val))
+                                  )
+                                if isValidPolygon
+                                  # build geojson
+                                  polygonGeoJSON = '{ "type": "Feature", "properties": {}, "geometry": { "coordinates": ' + geoJSONPolygonStr + ', "type": "Polygon" } }'
+                                  # change cdata and apply
+                                  cdata.conceptURI = polygonGeoJSON
+                                  cdata.conceptName = 'Polygon'
+                                  that.__updateResult(cdata, that.layout, opts)
+                                  that.modal.destroy()
+                                else
+                                  CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
+
+                              catch error
+                                # Display an alert for the error
+                                CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
+                        ]
+            that.modal.show()
+            that.modal.autoSize()
+      newCustomBarEntrys.push addNewPolygon
+
+      newCustomBarEntrys
+
+
+  #######################################################################
+  # handle editorinput
+  renderEditorInput: (data, top_level_data, opts) ->
+    that = @
+
+    name = @name(opts)
+    if not data[name]
+      data[name] = {
+            conceptName : ''
+            conceptURI : ''
+        }
+
+    cdata = data[@name(opts)]
+    if ! cdata?.conceptURI
+      cdata = {}
+
+    if @getCustomSchemaSettings()?.allow_textinput_point?.value == true || @getCustomSchemaSettings()?.allow_textinput_linestring?.value == true || @getCustomSchemaSettings()?.allow_textinput_polygon?.value == true
+      customButtonBarEntrys = that.getCustomButtonBarEntryForTextInput(that, data, cdata, opts)
+    @__renderEditorInputPopover(data, cdata, opts, customButtonBarEntrys)
+
+
 
   #######################################################################
   # renders the "result" in original form (outside popover)
@@ -508,6 +758,26 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       tags.push "✓ Geocoder"
     else
       tags.push "✘ Geocoder"
+
+    if custom_settings.mapbox_access_token?.value
+      tags.push "✓ Mapbox-Access-Token"
+    else
+      tags.push "✘ Mapbox-Access-Token"
+
+    if custom_settings.allow_textinput_point?.value
+      tags.push "✓ Textinput POINT"
+    else
+      tags.push "✘ Textinput POINT"
+
+    if custom_settings.allow_textinput_linestring?.value
+      tags.push "✓ Textinput LINESTRING"
+    else
+      tags.push "✘ Textinput LINESTRING"
+
+    if custom_settings.allow_textinput_polygon?.value
+      tags.push "✓ Textinput POLYGON"
+    else
+      tags.push "✘ Textinput POLYGON"
 
     tags
 

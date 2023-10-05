@@ -18,6 +18,9 @@ As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
 
 * which "mapbpox-API-key" to use
 * if "geocoder" is activated for adresssearch
+* allow to add POINT via text?
+* allow to add LINESTRING via text?
+* allow to add POLYGON via text?
 
 ### Mask options
 

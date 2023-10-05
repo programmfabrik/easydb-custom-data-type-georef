@@ -48,3 +48,7 @@
   border-left: 1px solid #ededed !important;
   margin-left: 1px;
 }
+
+.georefTextInputForm {
+  padding: 10px;
+}

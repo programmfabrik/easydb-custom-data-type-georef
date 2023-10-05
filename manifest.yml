@@ -32,3 +32,15 @@ custom_types:
           parameters:
             value:
               type: bool
+        - name: allow_textinput_point
+          parameters:
+            value:
+              type: bool
+        - name: allow_textinput_linestring
+          parameters:
+            value:
+              type: bool
+        - name: allow_textinput_polygon
+          parameters:
+            value:
+              type: bool
