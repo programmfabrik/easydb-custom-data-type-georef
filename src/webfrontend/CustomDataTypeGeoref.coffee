@@ -13,13 +13,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   #######################################################################
   # show popover and fill it with the form-elements
   showEditPopover: (btn, data, cdata, layout, opts) ->
-    cdata_form = new CUI.Form
-      data: cdata
-      fields: @__getEditorFields(cdata)
-      onDataChanged: =>
-        @__updateResult(cdata, layout, opts)
-        @__setEditorFieldStatus(cdata, layout)
-    .start()
 
     xmapboxpane = new CUI.SimplePane
         class: "georef_mapbox_container"
@@ -39,7 +32,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         header_left: new CUI.Label(text: $$('custom.data.type.georef.name'))
         # "save"-button
         footer_right: []
-        footer_left: cdata_form
 
         # "reset"-button
         content: xmapboxpane
@@ -47,7 +39,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         @__updateResult(cdata, layout, opts)
     .show()
 
-    @__initMap(cdata, cdata_form, layout, opts)
+    @__initMap(cdata, layout, opts)
 
 
   getMapboxAccessToken: () ->
@@ -59,10 +51,10 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     mapbox_access_token
 
 
+    
   ##########################################################################
   # initialisiere Karte
-  __initMap: (cdata, cdata_form, layout, opts) ->
-
+  __initMap: (cdata, layout, opts) ->
     that = @
 
     mapboxgl.accessToken = that.getMapboxAccessToken()
@@ -343,6 +335,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         console.error "no mapbox-access-token for georef"
     , timeout
 
+    
   #######################################################################
   # update result in Masterform
   __updateResult: (cdata, layout, opts) ->
@@ -434,8 +427,10 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
     # did data change?
     if ! opts?.deleteDataFromPlugin == true
+      opts.data[that.name(opts)] = cdata
       that.__setEditorFieldStatus(cdata, layout)
 
+        
   ##########################################################
   # custom add-new-Buttons for burger-menu
   ##########################################################
