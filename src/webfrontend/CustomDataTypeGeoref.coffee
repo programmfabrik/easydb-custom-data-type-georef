@@ -13,7 +13,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   #######################################################################
   # show popover and fill it with the form-elements
   showEditPopover: (btn, data, cdata, layout, opts) ->
-
+    that = @
     xmapboxpane = new CUI.SimplePane
         class: "georef_mapbox_container"
         header_left:
@@ -28,7 +28,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
       fill_space: "both"
       placement: "c"
       pane:
-        # titel of popovers
         header_left: new CUI.Label(text: $$('custom.data.type.georef.name'))
         # "save"-button
         footer_right: []
@@ -119,7 +118,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
         # get bounds of formlayer
         map.fitBounds geojsonExtent(geoJSON), padding: 20
         return
-
+    
     # click on map
     map.on 'click', (e) ->
       data = draw.getAll()
@@ -135,6 +134,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Point'
+            cdata._standard = {}
+            cdata._standard.text = cdata.conceptName
 
         if type == 'LineString'
           if data.features[0].geometry.coordinates.length >= 2
@@ -147,6 +148,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'LineString'
+            cdata._standard = {}
+            cdata._standard.text = cdata.conceptName
 
         if type == 'Polygon'
           # Each LinearRing of a Polygon must have 4 or more Positions
@@ -161,7 +164,9 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             # lock in save data
             cdata.conceptURI = geoJSON
             cdata.conceptName = 'Polygon'
-      return
+            cdata._standard = {}
+            cdata._standard.text = cdata.conceptName
+            
 
     # add click listener on type-buttons
     typebuttons = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn')
@@ -169,8 +174,9 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     # remove existing features, if click on "add feature".
     removeExistingFeatures = ->
       # reset form
-      cdata.conceptURI = ''
       cdata.conceptName = ''
+      cdata.conceptURI = ''
+        
       data = draw.getAll();
       draw.deleteAll()
 
@@ -180,6 +186,9 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     while i < typebuttons.length
       typebuttons[i].addEventListener 'mousedown', removeExistingFeatures, false
       i++
+        
+    # update map
+    that.__updateResult(cdata, layout, opts)
 
 
   #########################################################################
@@ -188,7 +197,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     fields = []
 
     fields
-
+    
 
   #######################################################################
   # checks the form and returns status
@@ -216,16 +225,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
           return "invalid"
         else
-          cdata = {
-                conceptName : ''
-                conceptURI : ''
-            }
           return "empty"
     else
-      cdata = {
-            conceptName : ''
-            conceptURI : ''
-        }
       return "empty"
 
 
@@ -290,7 +291,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
     setTimeout ->
 
       container = CUI.dom.findElement(parentNode.DOM, "#" + containerID)
-
       mapbox_access_token = that.getMapboxAccessToken()
       if mapbox_access_token
         mapboxgl.accessToken = mapbox_access_token
@@ -340,18 +340,11 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   # update result in Masterform
   __updateResult: (cdata, layout, opts) ->
     that = @
+    if opts.data
+      opts.data[that.name(opts)] = cdata
+        
     # if field is not empty
     if cdata?.conceptURI
-      # die uuid einkürzen..
-      displayURI = cdata.conceptURI
-      displayURI = displayURI.replace('http://', '')
-      displayURI = displayURI.replace('https://', '')
-      uriParts = displayURI.split('/')
-      uuid = uriParts.pop()
-      if uuid.length > 10
-        uuid = uuid.substring(0,5) + '…'
-        uriParts.push(uuid)
-        displayURI = uriParts.join('/')
 
       copyrightLabel = new CUI.Label
                       text: "Copyright"
@@ -390,8 +383,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                 ]
 
       # load static map to container
-      that.initStaticMap('georef_mapbox_container_static', cdata, layout)
-
+      that.initStaticMap('georef_mapbox_container_static', cdata, info)
       layout.replace(info, 'center')
       layout.addClass('ez5-linked-object-edit')
       options =
@@ -427,7 +419,6 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
 
     # did data change?
     if ! opts?.deleteDataFromPlugin == true
-      opts.data[that.name(opts)] = cdata
       that.__setEditorFieldStatus(cdata, layout)
 
         
@@ -435,10 +426,8 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
   # custom add-new-Buttons for burger-menu
   ##########################################################
   getCustomButtonBarEntryForTextInput: (that, data, cdata, opts={}) ->
-    that.modal = {}
 
     newCustomBarEntrys = []
-
     ##########################################################
     # if textinput for POINT is allowed
     ##########################################################
@@ -468,9 +457,9 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
             pointForm.start()
 
             that.dotsButtonMenu.hide()
-            that.modal = new CUI.Modal
-                placement: "c"
-                pane:
+            that.modalManualinput = new CUI.Modal
+                placement : "c"
+                pane :
                     class: "cui-pane"
                     header_left: new CUI.Label( text: $$("custom.data.type.georef.add_new.point.header_left"))
                     content: pointForm
@@ -480,7 +469,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                             text: $$("custom.data.type.georef.add_new.modal.cancel_button")
                             class: "cui-dialog"
                             onClick: =>
-                              that.modal.destroy()
+                              that.modalManualinput.destroy()
                         ,
                           new CUI.Button
                             text: $$("custom.data.type.georef.add_new.modal.ok")
@@ -499,13 +488,16 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                                 # change cdata and apply
                                 cdata.conceptURI = pointGeoJSON
                                 cdata.conceptName = 'Point'
+                                cdata._standard = {}
+                                cdata._standard.text = cdata.conceptName
                                 that.__updateResult(cdata, that.layout, opts)
-                                that.modal.destroy()
+                                that.modalManualinput.destroy()
+
                               else
                                 CUI.alert(text: $$("custom.data.type.georef.add_new.modal.error"))
-                        ]
-            that.modal.show()
-            that.modal.autoSize()
+                            ]
+            that.modalManualinput.show()
+            that.modalManualinput.autoSize()
       newCustomBarEntrys.push addNewPoint
 
     ##########################################################
@@ -536,7 +528,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                           ]
             lineStringForm.start()
             that.dotsButtonMenu.hide()
-            that.modal = new CUI.Modal
+            that.modalManualinput = new CUI.Modal
                 placement: "c"
                 pane:
                     class: "cui-pane"
@@ -548,7 +540,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                             text: $$("custom.data.type.georef.add_new.modal.cancel_button")
                             class: "cui-dialog"
                             onClick: =>
-                              that.modal.destroy()
+                              that.modalManualinput.destroy()
                         ,
                           new CUI.Button
                             text: $$("custom.data.type.georef.add_new.modal.ok")
@@ -571,15 +563,17 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                                   # change cdata and apply
                                   cdata.conceptURI = lineStringGeoJSON
                                   cdata.conceptName = 'LineString'
+                                  cdata._standard = {}
+                                  cdata._standard.text = cdata.conceptName
                                   that.__updateResult(cdata, that.layout, opts)
-                                  that.modal.destroy()
+                                  that.modalManualinput.destroy()
                                 else
                                   CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
                               catch error
                                 CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
                         ]
-            that.modal.show()
-            that.modal.autoSize()
+            that.modalManualinput.show()
+            that.modalManualinput.autoSize()
       newCustomBarEntrys.push addNewLineString
 
     ##########################################################
@@ -610,7 +604,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                           ]
             polygonForm.start()
             that.dotsButtonMenu.hide()
-            that.modal = new CUI.Modal
+            that.modalManualinput = new CUI.Modal
                 placement: "c"
                 pane:
                     class: "cui-pane"
@@ -622,7 +616,7 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                             text: $$("custom.data.type.georef.add_new.modal.cancel_button")
                             class: "cui-dialog"
                             onClick: =>
-                              that.modal.destroy()
+                              that.modalManualinput.destroy()
                         ,
                           new CUI.Button
                             text: $$("custom.data.type.georef.add_new.modal.ok")
@@ -647,8 +641,10 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                                   # change cdata and apply
                                   cdata.conceptURI = polygonGeoJSON
                                   cdata.conceptName = 'Polygon'
+                                  cdata._standard = {}
+                                  cdata._standard.text = cdata.conceptName
                                   that.__updateResult(cdata, that.layout, opts)
-                                  that.modal.destroy()
+                                  that.modalManualinput.destroy()
                                 else
                                   CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
 
@@ -656,37 +652,34 @@ class CustomDataTypeGeoref extends CustomDataTypeWithCommons
                                 # Display an alert for the error
                                 CUI.alert text: $$("custom.data.type.georef.add_new.modal.error")
                         ]
-            that.modal.show()
-            that.modal.autoSize()
+            that.modalManualinput.show()
+            that.modalManualinput.autoSize()
       newCustomBarEntrys.push addNewPolygon
 
-      newCustomBarEntrys
+    newCustomBarEntrys
 
 
   #######################################################################
   # handle editorinput
   renderEditorInput: (data, top_level_data, opts) ->
     that = @
-
-    name = @name(opts)
-    if not data[name]
-      data[name] = {
+    if not data[@name()] and ! cdata?.conceptURI and !cdata?.conceptName
+        cdata = {
             conceptName : ''
             conceptURI : ''
         }
-
-    cdata = data[@name(opts)]
-    if ! cdata?.conceptURI
-      cdata = {}
-
+        data[@name()] = cdata
+    else
+        cdata = data[@name()]
+        
     if @getCustomSchemaSettings()?.allow_textinput_point?.value == true || @getCustomSchemaSettings()?.allow_textinput_linestring?.value == true || @getCustomSchemaSettings()?.allow_textinput_polygon?.value == true
-      customButtonBarEntrys = that.getCustomButtonBarEntryForTextInput(that, data, cdata, opts)
+        customButtonBarEntrys = that.getCustomButtonBarEntryForTextInput(that, data, cdata, opts)
     @__renderEditorInputPopover(data, cdata, opts, customButtonBarEntrys)
 
 
 
   #######################################################################
-  # renders the "result" in original form (outside popover)
+  # renders the "result" in detail mask
 
   __renderButtonByData: (cdata) ->
     that = @
