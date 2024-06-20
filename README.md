@@ -10,6 +10,38 @@ This is a plugin for [easyDB 5](http://5.easydb.de/) with Custom Data Type `Cust
 
 The Plugins uses the [Mapbox-API](https://www.mapbox.com/api-documentation/) for the Map-Rendering and magic. You can set Polygons, Linestrings and Points on the worldmap. This is saved in geojson-Format.
 
+## Installation
+
+This plugin is activated by adding it to the plugins section of the extension block in your `easydb-server.yml`:
+```yaml
+extension:
+  plugins:
+    - name: custom-data-type-georef
+      file: plugin/easydb-custom-data-type-georef/CustomDataTypeGeoref.config.yml
+```
+
+And then it ha to be enabled:
+```yaml
+plugins:
+  enabled+:
+    - base.easydb4migration
+    - extension.custom-data-type-georef
+  enabled-:
+    - base.custom-data-type-georef
+```
+Note the entry below `enabled-`. 
+This has to be present if the custom data type conflicts with the default georeference type. 
+This is the case if your container exits with:
+
+```bash
+[b33358a7][2021-04-19T10:57:10.644677][   105][   ERROR][      pf.server.main] exception: {
+    "realm": "server",
+    "code": "error.server.generic",
+    "parameters": {},
+    "description": "Conflict loading plugins"
+}
+```
+
 ## configuration
 
 As defined in `CustomDataTypeGeoref.config.yml` this datatype can be configured:
